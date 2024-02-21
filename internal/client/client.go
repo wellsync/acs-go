@@ -32,6 +32,7 @@ func NewClient(accessToken string, timeout *time.Duration) *Client {
 }
 
 func (client *Client) Do(req *http.Request) (*http.Response, error) {
+	req.Header.Set("Content-Type", "application/json")
 	err := signRequest(req, client.accessToken)
 	if err != nil {
 		return nil, fmt.Errorf("failed to sign request: %w", err)
@@ -40,9 +41,6 @@ func (client *Client) Do(req *http.Request) (*http.Response, error) {
 	resp, err := client.client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("failed sending request to acs: %w", err)
-	}
-	if resp.StatusCode >= http.StatusBadRequest {
-		return nil, fmt.Errorf("acs rejected request: HTTP %v", resp.Status)
 	}
 
 	return resp, nil
@@ -61,7 +59,7 @@ func signRequest(r *http.Request, token string) error {
 		return err
 	}
 
-	ts := time.Now().UTC().String()
+	ts := time.Now().UTC().Format(http.TimeFormat)
 	stringToSign := fmt.Sprintf("%s\n%s\n%s;%s;%s",
 		r.Method,
 		r.URL.Path+"?"+r.URL.RawQuery,

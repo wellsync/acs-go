@@ -52,5 +52,9 @@ func (ec *EmailClient) Send(ctx context.Context, msg Message) (*SendResult, erro
 		return nil, fmt.Errorf("failed to unmarshal send result: %w", err)
 	}
 
+	if resp.StatusCode >= http.StatusBadRequest {
+		return &response, fmt.Errorf("acs rejected request: HTTP %v, %+v", resp.Status, response.Error)
+	}
+
 	return &response, nil
 }
